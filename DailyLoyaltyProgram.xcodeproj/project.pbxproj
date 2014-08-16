@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7B8369224D434DDE84AE5E30 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4372B42404444018B777C35C /* libPods.a */; };
 		9A67E85F199EFC3B009ED52E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A67E85E199EFC3B009ED52E /* AppDelegate.swift */; };
 		9A67E861199EFC3B009ED52E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A67E860199EFC3B009ED52E /* ViewController.swift */; };
 		9A67E864199EFC3B009ED52E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9A67E862199EFC3B009ED52E /* Main.storyboard */; };
@@ -26,6 +27,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		349E1C69E347431E8858CE6A /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = "<group>"; };
+		4372B42404444018B777C35C /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		9A12D897199F4BF60078BA07 /* DailyLoyaltyProgram-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DailyLoyaltyProgram-Bridging-Header.h"; sourceTree = "<group>"; };
 		9A67E859199EFC3B009ED52E /* DailyLoyaltyProgram.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyLoyaltyProgram.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A67E85D199EFC3B009ED52E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9A67E85E199EFC3B009ED52E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -44,6 +48,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9A67E87C199EFC48009ED52E /* CoreLocation.framework in Frameworks */,
+				7B8369224D434DDE84AE5E30 /* libPods.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -64,6 +69,8 @@
 				9A67E85B199EFC3B009ED52E /* DailyLoyaltyProgram */,
 				9A67E86E199EFC3B009ED52E /* DailyLoyaltyProgramTests */,
 				9A67E85A199EFC3B009ED52E /* Products */,
+				349E1C69E347431E8858CE6A /* Pods.xcconfig */,
+				DF285599B5C340E8BC073AA6 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -84,6 +91,7 @@
 				9A67E862199EFC3B009ED52E /* Main.storyboard */,
 				9A67E865199EFC3B009ED52E /* Images.xcassets */,
 				9A67E85C199EFC3B009ED52E /* Supporting Files */,
+				9A12D897199F4BF60078BA07 /* DailyLoyaltyProgram-Bridging-Header.h */,
 			);
 			path = DailyLoyaltyProgram;
 			sourceTree = "<group>";
@@ -113,6 +121,14 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		DF285599B5C340E8BC073AA6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4372B42404444018B777C35C /* libPods.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -120,9 +136,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9A67E875199EFC3B009ED52E /* Build configuration list for PBXNativeTarget "DailyLoyaltyProgram" */;
 			buildPhases = (
+				5A1046D96BFD41EEB84B3D94 /* Check Pods Manifest.lock */,
 				9A67E855199EFC3B009ED52E /* Sources */,
 				9A67E856199EFC3B009ED52E /* Frameworks */,
 				9A67E857199EFC3B009ED52E /* Resources */,
+				CA91E5039AC54702B11F6405 /* Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -211,6 +229,39 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		5A1046D96BFD41EEB84B3D94 /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		CA91E5039AC54702B11F6405 /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Pods-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		9A67E855199EFC3B009ED52E /* Sources */ = {
@@ -331,25 +382,32 @@
 		};
 		9A67E876199EFC3B009ED52E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 349E1C69E347431E8858CE6A /* Pods.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_MODULES = YES;
 				INFOPLIST_FILE = DailyLoyaltyProgram/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "DailyLoyaltyProgram/DailyLoyaltyProgram-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		9A67E877199EFC3B009ED52E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 349E1C69E347431E8858CE6A /* Pods.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_MODULES = YES;
 				INFOPLIST_FILE = DailyLoyaltyProgram/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "DailyLoyaltyProgram/DailyLoyaltyProgram-Bridging-Header.h";
 			};
 			name = Release;
 		};
@@ -408,6 +466,7 @@
 				9A67E877199EFC3B009ED52E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		9A67E878199EFC3B009ED52E /* Build configuration list for PBXNativeTarget "DailyLoyaltyProgramTests" */ = {
 			isa = XCConfigurationList;
@@ -416,6 +475,7 @@
 				9A67E87A199EFC3B009ED52E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
