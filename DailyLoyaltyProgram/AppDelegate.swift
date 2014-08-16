@@ -15,38 +15,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     var window: UIWindow?
     var locationManager: CLLocationManager?
     var lastProximity: CLProximity?
-    var detectedBeacons = Dictionary<String, NSDate>()
+    var detectedBeacons = Array<PFObject>()
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: NSDictionary?) -> Bool {
         // Override point for customization after application launch.
-        
-        // Garage Society iBeacon UUID
-        let uuidString = "B9407F30-F5F8-466E-AFF9-25556B57FE6D"
-        let beaconIdentifier = "iBeaconGarageSociety"
-        let beaconUUID:NSUUID = NSUUID(UUIDString: uuidString)
-        let beaconRegion:CLBeaconRegion = CLBeaconRegion(proximityUUID: beaconUUID, identifier: beaconIdentifier)
-        
-        locationManager = CLLocationManager()
-        if(locationManager!.respondsToSelector("requestAlwaysAuthorization")) {
-            locationManager!.requestAlwaysAuthorization()
-        }
-        locationManager!.delegate = self
-        locationManager!.pausesLocationUpdatesAutomatically = false
-        
-        locationManager!.startMonitoringForRegion(beaconRegion)
-        locationManager!.startRangingBeaconsInRegion(beaconRegion)
-        locationManager!.startUpdatingLocation()
-        
-        if(application.respondsToSelector("registerUserNotificationSettings:")) {
-            application.registerUserNotificationSettings(
-                UIUserNotificationSettings(
-                    forTypes: UIUserNotificationType.Alert | UIUserNotificationType.Sound,
-                    categories: nil
-                )
-            )
-        }
-        
-        // TODO load detectedBeacons from backend database
+        setupParse()
+        setupLocationManager(application)
+        setupUserBeaconHistory()
         
         return true
     }
@@ -81,15 +56,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
                 switch beacon.proximity {
                 case CLProximity.Far:
                     let deviceFullId = "\(beacon.proximityUUID) \(beacon.major) \(beacon.minor)"
-                    let index = detectedBeacons.indexForKey(deviceFullId)
-                    if (index) {
-                        if (detectedBeacons[deviceFullId]!.timeIntervalSinceNow < -86400) {
-                            detectedBeacons[deviceFullId] = NSDate()
+                    let result = detectedBeacons.filter { ($0.valueForKey("deviceFullId") as String) == deviceFullId }
+
+                    if (result.count > 0) {
+                        let lastVisitedAt = result[0].valueForKey("lastVisitedAt") as NSDate
+                        if (lastVisitedAt.timeIntervalSinceNow < -86400) {
+                            refreshDeviceLastVisitedAt(result[0])
                             
                             sendLocalNotificationWithMessage(beacon)
                         }
                     } else {
-                        detectedBeacons[deviceFullId] = NSDate()
+                        createVisitHistory(deviceFullId)
                         
                         sendLocalNotificationWithMessage(beacon)
                     }
@@ -99,8 +76,82 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             }
         }
     }
+    
+    func setupParse() {
+        let parseAppId = "hGsFyhrhf5bJxAxiqiQmMOXF6DHUeJ9NZR5gRdWQ"
+        let parseClientKey = "1OnagQR3BcwgEUOYknAEcb45PGqyWou0aeehVJQF"
+        Parse.setApplicationId("hGsFyhrhf5bJxAxiqiQmMOXF6DHUeJ9NZR5gRdWQ", clientKey: parseClientKey)
+        PFUser.enableAutomaticUser()
+    }
+    
+    func setupLocationManager(application: UIApplication) {
+        // Garage Society iBeacon UUID
+        let uuidString = "B9407F30-F5F8-466E-AFF9-25556B57FE6D"
+        let beaconIdentifier = "iBeaconGarageSociety"
+        let beaconUUID:NSUUID = NSUUID(UUIDString: uuidString)
+        let beaconRegion:CLBeaconRegion = CLBeaconRegion(proximityUUID: beaconUUID, identifier: beaconIdentifier)
+        
+        locationManager = CLLocationManager()
+        if(locationManager!.respondsToSelector("requestAlwaysAuthorization")) {
+            locationManager!.requestAlwaysAuthorization()
+        }
+        locationManager!.delegate = self
+        locationManager!.pausesLocationUpdatesAutomatically = false
+        
+        locationManager!.startMonitoringForRegion(beaconRegion)
+        locationManager!.startRangingBeaconsInRegion(beaconRegion)
+        locationManager!.startUpdatingLocation()
+        
+        if(application.respondsToSelector("registerUserNotificationSettings:")) {
+            application.registerUserNotificationSettings(
+                UIUserNotificationSettings(
+                    forTypes: UIUserNotificationType.Alert | UIUserNotificationType.Sound,
+                    categories: nil
+                )
+            )
+        }
+    }
+    
+    func setupUserBeaconHistory() {
+        var query = PFQuery(className: "VisitHistory")
+        query.whereKey("userId", equalTo: PFUser.currentUser().objectId)
+        query.findObjectsInBackgroundWithBlock({(NSArray objects, NSError error) in
+            if (error != nil) {
+                NSLog("error " + error.localizedDescription)
+            } else {
+                NSLog("objects %@", objects as NSArray)
+                self.detectedBeacons = objects as Array<PFObject>
+            }
+        })
+    }
+    
+    func refreshDeviceLastVisitedAt(record: PFObject) {
+        record.setValue(NSDate(), forKey: "lastVisitedAt")
+        record.saveInBackgroundWithBlock {
+            (success: Bool!, error: NSError!) -> Void in
+            if (success) {
+                NSLog("Object updated with id: \(record.objectId)")
+            } else {
+                NSLog("%@", error)
+            }
+        }
+    }
+    
+    func createVisitHistory(deviceFullId: String) {
+        let visitHistory = PFObject(className: "VisitHistory")
+        visitHistory.setValue(PFUser.currentUser().objectId, forKey: "userId")
+        visitHistory.setValue(deviceFullId, forKey: "deviceFullId")
+        visitHistory.setValue(NSDate(), forKey: "lastVisitedAt")
+        visitHistory.saveInBackgroundWithBlock {
+            (success: Bool!, error: NSError!) -> Void in
+            if (success) {
+                NSLog("Object created with id: \(visitHistory.objectId)")
+            } else {
+                NSLog("%@", error)
+            }
+        }
+    }
 }
-
 
 extension AppDelegate: CLLocationManagerDelegate {
     func sendLocalNotificationWithMessage(beacon: CLBeacon) {
