@@ -49,26 +49,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
 
     func showDailyAd(inRegionBeacons: AnyObject[]!) {
-        if (inRegionBeacons.count > 0) {
+        if (!inRegionBeacons.isEmpty) {
             for inRegionBeacon in inRegionBeacons {
                 let beacon:CLBeacon = inRegionBeacon as CLBeacon
                 
                 switch beacon.proximity {
                 case CLProximity.Far:
-                    let deviceFullId = "\(beacon.proximityUUID) \(beacon.major) \(beacon.minor)"
-                    let result = detectedBeacons.filter { ($0.valueForKey("deviceFullId") as String) == deviceFullId }
+                    let deviceFullId = "\(beacon.proximityUUID.UUIDString) \(beacon.major) \(beacon.minor)"
+                    let result = detectedBeacons.filter {
+                        return ($0.valueForKey("deviceFullId") as String) == deviceFullId
+                    }
 
-                    if (result.count > 0) {
+                    if (result.isEmpty) {
+                        createVisitHistory(deviceFullId)
+                        
+                        sendLocalNotificationWithMessage(beacon)
+                    } else {
                         let lastVisitedAt = result[0].valueForKey("lastVisitedAt") as NSDate
                         if (lastVisitedAt.timeIntervalSinceNow < -86400) {
                             refreshDeviceLastVisitedAt(result[0])
                             
                             sendLocalNotificationWithMessage(beacon)
                         }
-                    } else {
-                        createVisitHistory(deviceFullId)
-                        
-                        sendLocalNotificationWithMessage(beacon)
                     }
                 default:
                     continue
@@ -78,13 +80,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
     
     func setupParse() {
+        // TODO put inside plist
         let parseAppId = "hGsFyhrhf5bJxAxiqiQmMOXF6DHUeJ9NZR5gRdWQ"
         let parseClientKey = "1OnagQR3BcwgEUOYknAEcb45PGqyWou0aeehVJQF"
-        Parse.setApplicationId("hGsFyhrhf5bJxAxiqiQmMOXF6DHUeJ9NZR5gRdWQ", clientKey: parseClientKey)
+        Parse.setApplicationId(parseAppId, clientKey: parseClientKey)
         PFUser.enableAutomaticUser()
+        PFUser.currentUser().save()
     }
     
     func setupLocationManager(application: UIApplication) {
+        // TODO get list of UUID from backend database
         // Garage Society iBeacon UUID
         let uuidString = "B9407F30-F5F8-466E-AFF9-25556B57FE6D"
         let beaconIdentifier = "iBeaconGarageSociety"
@@ -113,13 +118,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
     
     func setupUserBeaconHistory() {
-        var query = PFQuery(className: "VisitHistory")
-        query.whereKey("userId", equalTo: PFUser.currentUser().objectId)
+        var query: PFQuery = PFQuery(className: "VisitHistory")
+        var currentUser = PFUser.currentUser()
+        var userId = currentUser.objectId!
+        query.whereKey("userId", equalTo: userId)
         query.findObjectsInBackgroundWithBlock({(NSArray objects, NSError error) in
             if (error != nil) {
                 NSLog("error " + error.localizedDescription)
             } else {
-                NSLog("objects %@", objects as NSArray)
                 self.detectedBeacons = objects as Array<PFObject>
             }
         })
@@ -131,6 +137,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             (success: Bool!, error: NSError!) -> Void in
             if (success) {
                 NSLog("Object updated with id: \(record.objectId)")
+                
+                for (index, detectedBeacon) in enumerate(self.detectedBeacons) {
+                    if ((detectedBeacon.valueForKey("deviceFullId") as String) == record.valueForKey("deviceFullId") as String) {
+                        self.detectedBeacons.removeAtIndex(index)
+                        break
+                    }
+                }
+                
+                self.detectedBeacons.append(record)
             } else {
                 NSLog("%@", error)
             }
@@ -138,16 +153,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
     }
     
     func createVisitHistory(deviceFullId: String) {
-        let visitHistory = PFObject(className: "VisitHistory")
-        visitHistory.setValue(PFUser.currentUser().objectId, forKey: "userId")
-        visitHistory.setValue(deviceFullId, forKey: "deviceFullId")
-        visitHistory.setValue(NSDate(), forKey: "lastVisitedAt")
-        visitHistory.saveInBackgroundWithBlock {
-            (success: Bool!, error: NSError!) -> Void in
-            if (success) {
-                NSLog("Object created with id: \(visitHistory.objectId)")
-            } else {
-                NSLog("%@", error)
+        var currentUser = PFUser.currentUser()
+        var userId = currentUser.objectId!
+            
+        let query: PFQuery = PFQuery(className: "VisitHistory")
+        query.whereKey("userId", equalTo: userId)
+        query.whereKey("deviceFullID", equalTo: deviceFullId)
+        
+        if (query.countObjects() == 0) {
+            let visitHistory = PFObject(className: "VisitHistory")
+            visitHistory.setValue(userId, forKey: "userId")
+            visitHistory.setValue(deviceFullId, forKey: "deviceFullId")
+            visitHistory.setValue(NSDate(), forKey: "lastVisitedAt")
+            visitHistory.saveInBackgroundWithBlock {
+                (success: Bool!, error: NSError!) -> Void in
+                if (success) {
+                    NSLog("Object created with id: \(visitHistory.objectId)")
+                    
+                    self.detectedBeacons.append(visitHistory)
+                } else {
+                    NSLog("%@", error)
+                }
             }
         }
     }
@@ -155,7 +181,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
 
 extension AppDelegate: CLLocationManagerDelegate {
     func sendLocalNotificationWithMessage(beacon: CLBeacon) {
-        let message = "Within Far Region of \(beacon.proximityUUID) \(beacon.major) \(beacon.minor)"
+        let message = "Within Far Region of \(beacon.proximityUUID.UUIDString) \(beacon.major) \(beacon.minor)"
         NSLog("%@", message)
         
         let notification:UILocalNotification = UILocalNotification()
